@@ -35,10 +35,13 @@ function toDeadline(expiration: number): number {
 
 const getPermitData = async (vote: Vote) => {
   const wallet = ethers.Wallet.createRandom();
-  const provider = new ethers.providers.JsonRpcProvider(
-    "https://bsc-dataseed.binance.org/",
+  const provider = new ethers.JsonRpcProvider(
+    "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+    10,
+    // "https://bsc-dataseed.binance.org/",
   );
   const signer = new Wallet(wallet.privateKey, provider);
+  // @ts-ignore
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
   const {
     amount: permitAmount,
@@ -67,7 +70,8 @@ const getPermitData = async (vote: Vote) => {
   );
 
   // We use an ethers signer to sign this data:
-  const signature = await signer._signTypedData(domain, types, values);
+  // @ts-ignore
+  const signature = await signer.signTypedData(domain, types, values);
   return { signature, permit: permitSingle };
 };
 
@@ -90,11 +94,18 @@ export default async function (vote: Vote) {
 
   console.log(permit2Data);
   const address = "0xA9e9110fe3B4B169b2CA0e8825C7CE76EB0b9438";
-
+  //
+  //
   const tx = await new ethers.Contract(
     address,
     AlloAbi,
-  ).populateTransaction.allocate(encodedAllocation);
+  ).allocate.populateTransaction(encodedAllocation);
+  //
+  //
+  // const tx = await new ethers.Contract(
+  //   address,
+  //   AlloAbi,
+  // ).populateTransaction.allocate(encodedAllocation);
 
   return { tx, vote };
 }

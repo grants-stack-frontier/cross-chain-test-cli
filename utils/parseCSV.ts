@@ -1,7 +1,7 @@
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import * as fs from "fs";
-import { BigNumber } from "ethers";
+import { BigNumberish } from "ethers";
 
 import { Vote } from "../types";
 
@@ -41,14 +41,14 @@ const typeVote = (vote: Record<string, string>): Vote => {
   return {
     chain_id: parseInt(vote.chain_id),
     voter: vote.voter,
-    amount: BigNumber.from(vote.amount),
+    amount: BigInt(vote.amount),
     token: vote.token as `0x${string}`,
     amountUSD: parseFloat(vote.amountUSD),
     payoutAddress: vote.payoutAddress as `0x${string}`,
     round_name: vote.round_name,
     roundAddress: vote.roundAddress as `0x${string}`,
-    tx_gasPrice: BigNumber.from(vote.tx_gasPrice),
-    tx_gasSpent: BigNumber.from(vote.tx_gasSpent),
+    tx_gasPrice: BigInt(vote.tx_gasPrice),
+    tx_gasSpent: BigInt(vote.tx_gasSpent),
     tx_timestamp: new Date(vote.tx_timestamp),
   };
 };

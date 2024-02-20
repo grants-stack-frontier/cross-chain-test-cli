@@ -1,10 +1,13 @@
-import {Vote} from "../types";
+import { Vote } from "../types";
 import populateQVSimpleAllocateTransaction from "./QVSimple";
-import {ethers} from "ethers";
+import { ethers } from "ethers";
 
-export async function populateAllocateTransaction(type: string, vote: Vote): Promise<{ tx: ethers.PopulatedTransaction, vote: Vote }> {
+export async function populateAllocateTransaction(
+  type: string,
+  vote: Vote,
+): Promise<{ tx: ethers.ContractTransaction; vote: Vote }> {
   switch (type) {
-    case 'QVSimple': {
+    case "QVSimple": {
       return populateQVSimpleAllocateTransaction(vote);
     }
     default: {
