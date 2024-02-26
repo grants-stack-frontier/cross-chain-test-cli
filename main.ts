@@ -49,7 +49,7 @@ async function main() {
     "toTokenAddress",
     "toTokenAmount",
     "gasPrice",
-    "totalCost",
+    "totalCostUSD",
   ];
 
   // txHash = simulation.hash
@@ -61,15 +61,15 @@ async function main() {
   // toTokenAmount = quotes.request.toAmount
   // gasPrice = simulation.gasPrice
   // value = simulation.value
-  // gasCosts = quotes.costs.gasCosts
-  // feeCosts = quotes.costs.feeCosts
+  // totalCostUSD = quotes.costs.feeCosts + quotes.costs.gasCosts
 
   const data = simulations.map((simulation, index) => {
     const quote = quotes[index].request;
 
-    console.log(quotes[index].costs)
+    console.log(quotes[index].costs);
     const totalCost =
-      quotes[index].costs.feeCosts + quotes[index].costs.gasCosts;
+      Number(quotes[index].costs.feeCosts) +
+      Number(quotes[index].costs.gasCosts);
 
     return [
       simulation.hash,
