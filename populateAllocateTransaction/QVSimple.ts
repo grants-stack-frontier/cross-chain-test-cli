@@ -1,5 +1,5 @@
 import { Vote } from "../types";
-import { ethers, Wallet } from "ethers";
+import { ethers } from "ethers";
 import { AlloAbi } from "@allo-team/allo-v2-sdk";
 import {
   AllowanceProvider,
@@ -8,6 +8,7 @@ import {
   SignatureTransfer,
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
+import { wallet } from "../utils/ethers";
 
 const POOL_ID = 1;
 
@@ -20,22 +21,13 @@ function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
 }
 
-// Example from the docs
-// const generateKLIMATransaction = async (receivedAmount: string) => {
-//   const stakeKlimaTx = await new ethers.Contract(
-//     KLIMA_STAKING_CONTRACT,
-//     KLIMA_STAKING_ABI
-//   ).populateTransaction.stake(receivedAmount);
-//   return stakeKlimaTx;
-// };
-
 const getPermitData = async (vote: Vote) => {
-  const wallet = ethers.Wallet.createRandom();
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://bsc-dataseed.binance.org/",
+    "https://mainnet.optimism.io",
   );
-  const signer = new Wallet(wallet.privateKey, provider);
+  const signer = wallet.connect(provider);
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
+
   const {
     amount: permitAmount,
     expiration,
@@ -64,6 +56,7 @@ const getPermitData = async (vote: Vote) => {
 
   // We use an ethers signer to sign this data:
   const signature = await signer._signTypedData(domain, types, values);
+
   return { signature, permit: permitSingle };
 };
 
@@ -98,7 +91,8 @@ export default async function (vote: Vote) {
     permit2Data,
   });
 
-  const address = "0xA9e9110fe3B4B169b2CA0e8825C7CE76EB0b9438";
+  // Allo Proxy https://github.com/allo-protocol/allo-v2/tree/main/contracts
+  const address = "0x1133eA7Af70876e64665ecD07C0A0476d09465a1";
 
   const tx = await new ethers.Contract(
     address,

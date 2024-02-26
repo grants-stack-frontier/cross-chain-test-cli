@@ -3,38 +3,92 @@ import { calculateDistribution } from "./calculateDistribution";
 import { populateAllocateTransaction } from "./populateAllocateTransaction";
 import { generateStrategyTransactions } from "./generateStrategyTransactions";
 import * as dotenv from "dotenv";
+import { simulateTransaction } from "./simulateTransaction";
+import { writeToCSV } from "./utils/writeCSV";
 
 dotenv.config();
-
-// Full ABI on
-// https://polygonscan.com/address/0x4D70a031Fc76DA6a9bC0C922101A05FA95c3A227#code
-const KLIMA_STAKING_ABI = ["function stake(uint _amount) external"];
 
 const filePath = "example_votes.csv";
 
 async function main() {
-  console.log(process.env.TENDERLY_ACCESS_KEY);
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
 
   // Calculate distribution across chains
   const { votes, targetChain } = calculateDistribution(parsedVotes, "default");
 
+  console.log(`Found ${votes.length} votes for ${targetChain} chains.`);
   // Create voting transactions
   const allocateTransactions = await Promise.all(
     votes.map((vote) => populateAllocateTransaction("QVSimple", vote)),
-  );
+  ).then((txs) => txs.filter((tx) => tx !== null));
+
+  console.log(`Generated ${allocateTransactions.length} transactions.`);
 
   const quotes = await Promise.all(
-    allocateTransactions.map((allocateTx) =>
-      generateStrategyTransactions("lifi", allocateTx.tx, allocateTx.vote),
-    ),
+    allocateTransactions
+      .map((allocateTx) =>
+        generateStrategyTransactions("lifi", allocateTx.tx, allocateTx.vote),
+      )
+      .filter((tx) => tx !== null),
   );
 
-  console.log(quotes);
+  console.log(`Received ${quotes.length} quotes.`);
 
-  // Get quote
-  // getQuote().then(console.log);
+  const simulations = await Promise.all(
+    quotes.map(({ quote }) => simulateTransaction(quote.transactionRequest)),
+  );
+
+  // write to CSV
+  const columns = [
+    "txHash",
+    "fromChain",
+    "fromTokenAddress",
+    "fromTokenAmount",
+    "toChain",
+    "toTokenAddress",
+    "toTokenAmount",
+    "gasPrice",
+    "totalCost",
+  ];
+
+  // txHash = simulation.hash
+  // fromChain = quotes.request.fromChain
+  // fromTokenAddress = quotes.request.fromTokenAddress
+  // fromTokenAmount = quotes.request.fromAmount
+  // toChain = quotes.request.toChain
+  // toTokenAddress = quotes.request.toToken
+  // toTokenAmount = quotes.request.toAmount
+  // gasPrice = simulation.gasPrice
+  // value = simulation.value
+  // gasCosts = quotes.costs.gasCosts
+  // feeCosts = quotes.costs.feeCosts
+
+  const data = simulations.map((simulation, index) => {
+    const quote = quotes[index].request;
+
+    console.log(quotes[index].costs)
+    const totalCost =
+      quotes[index].costs.feeCosts + quotes[index].costs.gasCosts;
+
+    return [
+      simulation.hash,
+      quote.fromChain,
+      quote.contractCalls[0].fromTokenAddress,
+      quote.contractCalls[0].fromAmount,
+      quote.toChain,
+      quote.toToken,
+      quote.toAmount,
+      simulation.gasPrice,
+      simulation.value.toString(),
+      totalCost,
+    ];
+  });
+
+  console.log(`Simulated ${simulations.length} transactions.`);
+
+  // Write to CSV
+  writeToCSV({ fileName: "output.csv", data, columns });
 }
 
 main();
