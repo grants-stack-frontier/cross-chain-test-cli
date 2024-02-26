@@ -1,19 +1,15 @@
 import { Vote } from "../types";
 import { ethers, Wallet } from "ethers";
-import {
-  AlloAbi,
-  DonationVotingMerkleDistributionStrategy,
-} from "@allo-team/allo-v2-sdk";
+import { AlloAbi } from "@allo-team/allo-v2-sdk";
 import {
   AllowanceProvider,
   PERMIT2_ADDRESS,
-  SignatureTransfer,
   PermitTransferFrom,
+  SignatureTransfer,
 } from "@uniswap/permit2-sdk";
-import { toMs } from "ms-typescript";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 
-const PERMIT_EXPIRATION = toMs("30d");
-const PERMIT_SIG_EXPIRATION = toMs("30m");
+const POOL_ID = 1;
 
 /**
  * Converts an expiration (in milliseconds) to a deadline (in seconds) suitable for the EVM.
@@ -71,30 +67,43 @@ const getPermitData = async (vote: Vote) => {
   return { signature, permit: permitSingle };
 };
 
+function getEncodedAllocation(data: any): `0x${string}` {
+  return encodeAbiParameters(
+    parseAbiParameters(
+      "address, (((address, uint256), uint256, uint256), bytes)",
+    ),
+    [
+      data.recipientId,
+      [
+        [
+          [
+            data.permit2Data.permit.permitted.token,
+            data.permit2Data.permit.permitted.amount,
+          ],
+          data.permit2Data.permit.nonce,
+          data.permit2Data.permit.deadline,
+        ],
+        data.permit2Data.signature,
+      ],
+    ],
+  );
+}
+
 export default async function (vote: Vote) {
   const permit2Data = await getPermitData(vote);
-  console.log(permit2Data);
 
-  const strategy = new DonationVotingMerkleDistributionStrategy({
-    chain: vote.chain_id,
-    poolId: 1,
-    rpc: "https://bsc-dataseed.binance.org/",
-    address: vote.roundAddress,
-  });
-
-  const encodedAllocation = strategy.getEncodedAllocation({
+  const encodedAllocation = getEncodedAllocation({
     recipientId: vote.payoutAddress,
     // @ts-ignore
     permit2Data,
   });
 
-  console.log(permit2Data);
   const address = "0xA9e9110fe3B4B169b2CA0e8825C7CE76EB0b9438";
 
   const tx = await new ethers.Contract(
     address,
     AlloAbi,
-  ).populateTransaction.allocate(encodedAllocation);
+  ).populateTransaction.allocate(POOL_ID, encodedAllocation);
 
   return { tx, vote };
 }
