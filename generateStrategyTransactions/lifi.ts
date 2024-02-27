@@ -2,13 +2,12 @@ import { ethers } from "ethers";
 import { Vote } from "../types";
 import axios from "axios";
 
-const endpoint = "https://li.quest/v1/quote/contractCall";
+// https://apidocs.li.fi/reference/post_quote-contractcalls
+// https://docs.li.fi/integrate-li.fi-js-sdk/testing-your-integration
+const endpoint = "https://li.quest/v1/quote/contractCalls";
 
-const DAI_ON_BSC = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3";
-const KLIMA_ON_POL = "0x4e78011ce80ee02d2c3e649fb657e45898257815";
-const SKLIMA_ON_POL = "0xb0c22d8d350c67420f06f48936654f567c73e8c8";
-
-const KLIMA_STAKING_CONTRACT = "0x4D70a031Fc76DA6a9bC0C922101A05FA95c3A227";
+const USDC_ON_OP = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+const USDC_ON_POL = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
 
 export async function generateLifiTransaction(
   tx: ethers.PopulatedTransaction,
@@ -19,22 +18,39 @@ export async function generateLifiTransaction(
 }
 
 const getQuote = async (tx: ethers.PopulatedTransaction): Promise<any> => {
-  // We would like to stake this amount of KLIMA to get sKLIMA
-  const stakeAmount = "300000000";
+  //USDC has 6 decimals
+  const stakeAmount = ethers.utils.parseUnits("10", 6).toString();
 
-  const quoteRequest = {
-    fromChain: "BSC",
-    fromToken: DAI_ON_BSC,
-    fromAddress: "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0",
-    toChain: "POL",
-    toToken: KLIMA_ON_POL,
-    toAmount: stakeAmount,
+  const contractCall = {
+    fromAmount: stakeAmount,
+    fromTokenAddress: USDC_ON_POL,
     toContractAddress: tx.to,
     toContractCallData: tx.data,
-    toContractGasLimit: "900000",
-    contractOutputsToken: SKLIMA_ON_POL,
+    toContractGasLimit: "90000",
+  };
+
+  const quoteRequest = {
+    fromChain: 10, // OP
+    fromToken: USDC_ON_OP,
+    fromAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    toChain: 137,
+    toToken: USDC_ON_POL,
+    toAmount: stakeAmount,
+    contractCalls: [contractCall],
   };
 
   const response = await axios.post(endpoint, quoteRequest);
-  return response.data;
+
+  return {
+    request: quoteRequest,
+    quote: response.data,
+    costs: {
+      feeCosts: response.data.estimate.feeCosts
+        .map((fee: any) => fee.amountUSD)
+        .reduce((a: any, b: any) => Number(a) + Number(b), 0),
+      gasCosts: response.data.estimate.gasCosts
+        .map((fee: any) => fee.amountUSD)
+        .reduce((a: any, b: any) => Number(a) + Number(b), 0),
+    },
+  };
 };
