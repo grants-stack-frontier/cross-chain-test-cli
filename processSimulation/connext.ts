@@ -1,18 +1,19 @@
 import { ethers } from "ethers";
 import { Result } from "../types";
+import { formatEther } from "ethers/lib/utils";
 
 export const processConnextSimulateTransaction = async (
   simulation: ethers.providers.TransactionResponse,
   quote: any,
-  createdAt: string,
 ): Promise<Result> => {
   const txReceipt = await simulation.wait();
 
+  const ethereumPrice = 3238.48;
   const gasCost = txReceipt.gasUsed;
   const feeCost = quote.costs.feeCosts;
 
-  const totalCostUSD = gasCost.add(feeCost).toNumber();
-  // const gasPrice = txReceipt.effectiveGasPrice.toString();
+  const totalCostEthereum = formatEther(gasCost.add(feeCost));
+  const totalCostUSD = Number(totalCostEthereum) * ethereumPrice;
   const gasPrice = txReceipt.effectiveGasPrice.toString();
 
   return {
@@ -25,7 +26,6 @@ export const processConnextSimulateTransaction = async (
     toTokenAmount: quote.request.toAmount,
     gasPrice,
     totalCostUSD,
-    createdAt,
     strategy: "connext",
   };
 };

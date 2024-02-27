@@ -4,7 +4,6 @@ import { Result } from "../types";
 export const processLifiSimulateTransaction = async (
   simulation: ethers.providers.TransactionResponse,
   quote: any,
-  createdAt: string,
 ): Promise<Result> => {
   return {
     txHash: simulation.hash,
@@ -16,7 +15,6 @@ export const processLifiSimulateTransaction = async (
     toTokenAmount: quote.request.toAmount,
     gasPrice: simulation.gasPrice?.toString() || "0",
     totalCostUSD: quote.costs.feeCosts + quote.costs.gasCosts,
-    createdAt,
     strategy: "lifi",
   };
 };

@@ -24,6 +24,5 @@ export type Result = {
   toTokenAmount: string;
   gasPrice: string;
   totalCostUSD: number;
-  createdAt: string;
   strategy: string;
 };

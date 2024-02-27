@@ -50,6 +50,8 @@ async function main() {
     quotes.map(({ quote }) => simulateTransaction(quote.transactionRequest)),
   );
 
+  console.log(`Simulated ${simulations.length} transactions.`);
+
   // write to CSV
   const columns = [
     "txHash",
@@ -61,6 +63,9 @@ async function main() {
     "toTokenAmount",
     "gasPrice",
     "totalCostUSD",
+    "createdAt",
+    "transactionType",
+    "strategy",
   ];
 
   // txHash = simulation.hash
@@ -96,32 +101,21 @@ async function main() {
   //   ];
   // });
 
-  console.log(`Simulated ${simulations.length} transactions.`);
-
-  // Write to CSV
-
   const createdAt = new Date().toISOString();
   const results = await Promise.all(
     simulations.map((simulation, index) => {
       switch (strategy) {
         case "lifi":
-          return processLifiSimulateTransaction(
-            simulation,
-            quotes[index],
-            createdAt,
-          );
+          return processLifiSimulateTransaction(simulation, quotes[index]);
         case "connext":
-          return processConnextSimulateTransaction(
-            simulation,
-            quotes[index],
-            createdAt,
-          );
+          return processConnextSimulateTransaction(simulation, quotes[index]);
         default:
           throw new Error(`Strategy ${strategy} not implemented`);
       }
     }),
-  );
+  ).then((res) => res.map((x) => ({ ...x, createdAt, transactionType })));
 
+  // Write to CSV
   writeToCSV({
     fileName: "output.csv",
     data: results.map((x) => Object.values(x)),
