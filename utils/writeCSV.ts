@@ -1,4 +1,4 @@
-import fs from "fs";
+import * as fs from "fs";
 import { stringify } from "csv-stringify";
 
 export const writableStream = (filename: string) =>

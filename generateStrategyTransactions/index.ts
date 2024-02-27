@@ -1,13 +1,19 @@
-import {ethers} from "ethers";
-import {Vote} from "../types";
-import {generateLifiTransaction} from "./lifi";
+import { ethers } from "ethers";
+import { Vote } from "../types";
+import { generateLifiTransaction } from "./lifi";
+import { generateConnextTransaction } from "./connext";
 
-export async function generateStrategyTransactions(strategy: string, tx: ethers.PopulatedTransaction, vote: Vote) {
+export async function generateStrategyTransactions(
+  strategy: string,
+  tx: ethers.PopulatedTransaction,
+  vote: Vote,
+) {
   switch (strategy) {
-    case 'lifi':
+    case "lifi":
       return generateLifiTransaction(tx, vote);
+    case "connext":
+      return generateConnextTransaction(tx, vote);
     default:
       throw new Error(`Strategy ${strategy} not implemented`);
   }
 }
-

@@ -9,6 +9,7 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
+import { tenderlyRpcUrl } from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -23,7 +24,8 @@ function toDeadline(expiration: number): number {
 
 const getPermitData = async (vote: Vote) => {
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://mainnet.optimism.io",
+    tenderlyRpcUrl,
+    // "https://mainnet.optimism.io",
   );
   const signer = wallet.connect(provider);
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
