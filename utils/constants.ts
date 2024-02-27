@@ -26,3 +26,10 @@ export const tenderlyRpcUrl = assertExists(
   process.env.TENDERLY_FORK_RPC,
   "TENDERLY_FORK_RPC",
 );
+
+export const sheetBestUrl = assertExists(
+  process.env.SHEET_BEST_URL,
+  "SHEET_BEST_URL",
+);
+
+export const storeResultsOnline = process.env.STORE_RESULTS_ONLINE === "true";

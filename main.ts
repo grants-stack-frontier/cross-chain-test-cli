@@ -5,12 +5,16 @@ import { generateStrategyTransactions } from "./generateStrategyTransactions";
 import * as dotenv from "dotenv";
 import { simulateTransaction } from "./simulateTransaction";
 import { writeToCSV } from "./utils/writeCSV";
+import axios from "axios";
+import { sheetBestUrl, storeResultsOnline } from "./utils/constants";
 
 dotenv.config();
 
 const filePath = "example_votes.csv";
 
 async function main() {
+  const strategy = "lifi";
+  const transactionType = "QVSimple";
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
 
@@ -20,7 +24,7 @@ async function main() {
   console.log(`Found ${votes.length} votes for ${targetChain} chains.`);
   // Create voting transactions
   const allocateTransactions = await Promise.all(
-    votes.map((vote) => populateAllocateTransaction("QVSimple", vote)),
+    votes.map((vote) => populateAllocateTransaction(transactionType, vote)),
   ).then((txs) => txs.filter((tx) => tx !== null));
 
   console.log(`Generated ${allocateTransactions.length} transactions.`);
@@ -28,7 +32,7 @@ async function main() {
   const quotes = await Promise.all(
     allocateTransactions
       .map((allocateTx) =>
-        generateStrategyTransactions("lifi", allocateTx.tx, allocateTx.vote),
+        generateStrategyTransactions(strategy, allocateTx.tx, allocateTx.vote),
       )
       .filter((tx) => tx !== null),
   );
@@ -89,6 +93,30 @@ async function main() {
 
   // Write to CSV
   writeToCSV({ fileName: "output.csv", data, columns });
+
+  if (storeResultsOnline) {
+    console.log("Storing results in google sheet...");
+    const createdAt = new Date().toISOString();
+    await axios.post(
+      sheetBestUrl,
+      simulations.map((simulation, index) => ({
+        txHash: simulation.hash,
+        fromChain: quotes[index].request.fromChain,
+        fromTokenAddress:
+          quotes[index].request.contractCalls[0].fromTokenAddress,
+        fromTokenAmount: quotes[index].request.contractCalls[0].fromAmount,
+        toChain: quotes[index].request.toChain,
+        toTokenAddress: quotes[index].request.toToken,
+        toTokenAmount: quotes[index].request.toAmount,
+        gasPrice: simulation.gasPrice,
+        totalCostUSD:
+          quotes[index].costs.feeCosts + quotes[index].costs.gasCosts,
+        createdAt,
+        transactionType,
+        strategy,
+      })),
+    );
+  }
 }
 
 main();

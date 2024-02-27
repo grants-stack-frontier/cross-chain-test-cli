@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node -r dotenv/config --typeCheck=false main.ts",
+    "start:save-results": "STORE_RESULTS_ONLINE=true npm run start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
