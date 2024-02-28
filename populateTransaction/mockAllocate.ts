@@ -9,7 +9,11 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
-import { ALLO_ADDRESS, tenderlyRpcUrl } from "../utils/constants";
+import {
+  MOCK_ALLO_ADDRESS,
+  tenderlyRpcUrl,
+  USDC_ON_POL,
+} from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -23,10 +27,7 @@ function toDeadline(expiration: number): number {
 }
 
 const getPermitData = async (vote: Vote) => {
-  const provider = new ethers.providers.JsonRpcProvider(
-    tenderlyRpcUrl,
-    // "https://mainnet.optimism.io",
-  );
+  const provider = new ethers.providers.JsonRpcProvider(tenderlyRpcUrl);
   const signer = wallet.connect(provider);
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
 
@@ -35,17 +36,17 @@ const getPermitData = async (vote: Vote) => {
     expiration,
     nonce,
   } = await allowanceProvider.getAllowanceData(
-    vote.token,
+    USDC_ON_POL,
     wallet.address,
-    vote.roundAddress,
+    MOCK_ALLO_ADDRESS,
   );
 
   const permitSingle: PermitTransferFrom = {
-    spender: vote.voter,
+    spender: wallet.address,
     nonce,
     permitted: {
       amount: permitAmount,
-      token: vote.token,
+      token: USDC_ON_POL,
     },
     deadline: expiration,
   };
@@ -93,10 +94,8 @@ export default async function (vote: Vote) {
     permit2Data,
   });
 
-  // Allo Proxy https://github.com/allo-protocol/allo-v2/tree/main/contracts
-
   const tx = await new ethers.Contract(
-    ALLO_ADDRESS,
+    MOCK_ALLO_ADDRESS,
     AlloAbi,
   ).populateTransaction.allocate(POOL_ID, encodedAllocation);
 
