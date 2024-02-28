@@ -1,13 +1,11 @@
 import { ethers } from "ethers";
 import { Vote } from "../types";
 import axios from "axios";
+import { USDC_ON_OP, USDC_ON_POL } from "../utils/constants";
 
 // https://apidocs.li.fi/reference/post_quote-contractcalls
 // https://docs.li.fi/integrate-li.fi-js-sdk/testing-your-integration
 const endpoint = "https://li.quest/v1/quote/contractCalls";
-
-const USDC_ON_OP = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
-const USDC_ON_POL = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
 
 export async function generateLifiTransaction(
   tx: ethers.PopulatedTransaction,

@@ -13,3 +13,16 @@ export type Vote = {
   tx_gasSpent: BigNumber;
   tx_timestamp: Date;
 };
+
+export type Result = {
+  txHash: string;
+  fromChain: number;
+  fromTokenAddress: string;
+  fromTokenAmount: string;
+  toChain: number;
+  toTokenAddress: string;
+  toTokenAmount: string;
+  gasPrice: string;
+  totalCostUSD: number;
+  strategy: string;
+};

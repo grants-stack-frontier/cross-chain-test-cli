@@ -1,20 +1,24 @@
 import { processFile } from "./utils/parseCSV";
 import { calculateDistribution } from "./calculateDistribution";
-import { populateAllocateTransaction } from "./populateAllocateTransaction";
+import { populateTransaction } from "./populateTransaction";
 import { generateStrategyTransactions } from "./generateStrategyTransactions";
 import * as dotenv from "dotenv";
 import { simulateTransaction } from "./simulateTransaction";
 import { writeToCSV } from "./utils/writeCSV";
 import axios from "axios";
 import { sheetBestUrl, storeResultsOnline } from "./utils/constants";
+import { prepareStrategy } from "./prepareStrategy";
+import { processLifiSimulateTransaction } from "./processSimulation/lifi";
+import { processConnextSimulateTransaction } from "./processSimulation/connext";
 
 dotenv.config();
 
 const filePath = "example_votes.csv";
 
 async function main() {
-  const strategy = "lifi";
-  const transactionType = "QVSimple";
+  const strategy: string = "connext";
+  const transactionType = "allocate";
+
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
 
@@ -24,10 +28,13 @@ async function main() {
   console.log(`Found ${votes.length} votes for ${targetChain} chains.`);
   // Create voting transactions
   const allocateTransactions = await Promise.all(
-    votes.map((vote) => populateAllocateTransaction(transactionType, vote)),
+    votes.map((vote) => populateTransaction(transactionType, vote)),
   ).then((txs) => txs.filter((tx) => tx !== null));
 
   console.log(`Generated ${allocateTransactions.length} transactions.`);
+
+  // Prepare strategy (set allowances etc)
+  await prepareStrategy(strategy);
 
   const quotes = await Promise.all(
     allocateTransactions
@@ -43,6 +50,8 @@ async function main() {
     quotes.map(({ quote }) => simulateTransaction(quote.transactionRequest)),
   );
 
+  console.log(`Simulated ${simulations.length} transactions.`);
+
   // write to CSV
   const columns = [
     "txHash",
@@ -54,6 +63,9 @@ async function main() {
     "toTokenAmount",
     "gasPrice",
     "totalCostUSD",
+    "strategy",
+    "createdAt",
+    "transactionType",
   ];
 
   // txHash = simulation.hash
@@ -67,55 +79,51 @@ async function main() {
   // value = simulation.value
   // totalCostUSD = quotes.costs.feeCosts + quotes.costs.gasCosts
 
-  const data = simulations.map((simulation, index) => {
-    const quote = quotes[index].request;
+  // const data = simulations.map((simulation, index) => {
+  //   const quote = quotes[index].request;
+  //
+  //   console.log(quotes[index].costs);
+  //   const totalCost =
+  //     Number(quotes[index].costs.feeCosts) +
+  //     Number(quotes[index].costs.gasCosts);
+  //
+  //   return [
+  //     simulation.hash,
+  //     quote.fromChain,
+  //     quote.contractCalls[0].fromTokenAddress,
+  //     quote.contractCalls[0].fromAmount,
+  //     quote.toChain,
+  //     quote.toToken,
+  //     quote.toAmount,
+  //     simulation.gasPrice,
+  //     simulation.value.toString(),
+  //     totalCost,
+  //   ];
+  // });
 
-    console.log(quotes[index].costs);
-    const totalCost =
-      Number(quotes[index].costs.feeCosts) +
-      Number(quotes[index].costs.gasCosts);
-
-    return [
-      simulation.hash,
-      quote.fromChain,
-      quote.contractCalls[0].fromTokenAddress,
-      quote.contractCalls[0].fromAmount,
-      quote.toChain,
-      quote.toToken,
-      quote.toAmount,
-      simulation.gasPrice,
-      simulation.value.toString(),
-      totalCost,
-    ];
-  });
-
-  console.log(`Simulated ${simulations.length} transactions.`);
+  const createdAt = new Date().toISOString();
+  const results = await Promise.all(
+    simulations.map((simulation, index) => {
+      switch (strategy) {
+        case "lifi":
+          return processLifiSimulateTransaction(simulation, quotes[index]);
+        case "connext":
+          return processConnextSimulateTransaction(simulation, quotes[index]);
+        default:
+          throw new Error(`Strategy ${strategy} not implemented`);
+      }
+    }),
+  ).then((res) => res.map((x) => ({ ...x, createdAt, transactionType })));
 
   // Write to CSV
-  writeToCSV({ fileName: "output.csv", data, columns });
-
+  writeToCSV({
+    fileName: "output.csv",
+    data: results.map((x) => Object.values(x)),
+    columns,
+  });
   if (storeResultsOnline) {
     console.log("Storing results in google sheet...");
-    const createdAt = new Date().toISOString();
-    await axios.post(
-      sheetBestUrl,
-      simulations.map((simulation, index) => ({
-        txHash: simulation.hash,
-        fromChain: quotes[index].request.fromChain,
-        fromTokenAddress:
-          quotes[index].request.contractCalls[0].fromTokenAddress,
-        fromTokenAmount: quotes[index].request.contractCalls[0].fromAmount,
-        toChain: quotes[index].request.toChain,
-        toTokenAddress: quotes[index].request.toToken,
-        toTokenAmount: quotes[index].request.toAmount,
-        gasPrice: simulation.gasPrice,
-        totalCostUSD:
-          quotes[index].costs.feeCosts + quotes[index].costs.gasCosts,
-        createdAt,
-        transactionType,
-        strategy,
-      })),
-    );
+    await axios.post(sheetBestUrl, results);
   }
 }
 
