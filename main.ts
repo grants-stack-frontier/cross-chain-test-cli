@@ -63,9 +63,9 @@ async function main() {
     "toTokenAmount",
     "gasPrice",
     "totalCostUSD",
+    "strategy",
     "createdAt",
     "transactionType",
-    "strategy",
   ];
 
   // txHash = simulation.hash
