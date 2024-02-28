@@ -6,18 +6,49 @@ import * as dotenv from "dotenv";
 import { simulateTransaction } from "./simulateTransaction";
 import { writeToCSV } from "./utils/writeCSV";
 import axios from "axios";
-import { sheetBestUrl, storeResultsOnline } from "./utils/constants";
+import { sheetBestUrl } from "./utils/constants";
 import { prepareStrategy } from "./prepareStrategy";
 import { processLifiSimulateTransaction } from "./processSimulation/lifi";
 import { processConnextSimulateTransaction } from "./processSimulation/connext";
+import { confirm, select } from "@inquirer/prompts";
 
 dotenv.config();
 
 const filePath = "example_votes.csv";
 
 async function main() {
-  const strategy: string = "connext";
-  const transactionType = "allocate";
+  const strategy: string = await select({
+    message: "Select strategy",
+    choices: [
+      {
+        name: "Lifi",
+        value: "lifi",
+      },
+      {
+        name: "Connext",
+        value: "connext",
+      },
+    ],
+    default: "lifi",
+  });
+  const transactionType = await select({
+    message: "Select transaction type",
+    choices: [
+      {
+        name: "Allocate",
+        value: "allocate",
+      },
+      {
+        name: "Mock Allocate",
+        value: "mockAllocate",
+      },
+    ],
+    default: "allocate",
+  });
+  const storeResultsOnline = await confirm({
+    message: "Store results online?",
+    default: false,
+  });
 
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
