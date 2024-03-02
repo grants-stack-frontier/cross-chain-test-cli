@@ -1,12 +1,12 @@
 import { ethers } from "ethers";
-import { Vote } from "../types";
+import { VoteWithChains } from "../types";
 import { generateLifiTransaction } from "./lifi";
 import { generateConnextTransaction } from "./connext";
 
 export async function generateStrategyTransactions(
   strategy: string,
   tx: ethers.PopulatedTransaction,
-  vote: Vote,
+  vote: VoteWithChains,
 ) {
   switch (strategy) {
     case "lifi":

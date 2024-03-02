@@ -1,8 +1,18 @@
-import {Vote} from "./types";
+import { Vote, VoteWithChains } from "./types";
+import { getTokenForChain } from "./utils/constants";
 
-export function calculateDistribution(votes: Vote[], strategy: string) {
+export function calculateDistribution(
+  votes: Vote[],
+  fromChain: number,
+  toChain: number,
+  strategy: string,
+): { votes: VoteWithChains[] } {
   return {
-    votes,
-    targetChain: 10,
+    votes: votes.map((vote) => ({
+      ...vote,
+      token: getTokenForChain(fromChain, strategy),
+      fromChain,
+      toChain,
+    })),
   };
 }

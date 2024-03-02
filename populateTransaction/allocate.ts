@@ -1,4 +1,4 @@
-import { Vote } from "../types";
+import { VoteWithChains } from "../types";
 import { ethers } from "ethers";
 import { AlloAbi } from "@allo-team/allo-v2-sdk";
 import {
@@ -22,7 +22,7 @@ function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
 }
 
-const getPermitData = async (vote: Vote) => {
+const getPermitData = async (vote: VoteWithChains) => {
   const provider = new ethers.providers.JsonRpcProvider(
     tenderlyRpcUrl,
     // "https://mainnet.optimism.io",
@@ -53,7 +53,7 @@ const getPermitData = async (vote: Vote) => {
   const { domain, types, values } = SignatureTransfer.getPermitData(
     permitSingle,
     PERMIT2_ADDRESS,
-    vote.chain_id,
+    vote.fromChain,
   );
 
   // We use an ethers signer to sign this data:
@@ -84,7 +84,7 @@ function getEncodedAllocation(data: any): `0x${string}` {
   );
 }
 
-export default async function (vote: Vote) {
+export default async function (vote: VoteWithChains) {
   const permit2Data = await getPermitData(vote);
 
   const encodedAllocation = getEncodedAllocation({

@@ -1,4 +1,4 @@
-import { Vote } from "../types";
+import { Vote, VoteWithChains } from "../types";
 import { ethers } from "ethers";
 import { AlloAbi } from "@allo-team/allo-v2-sdk";
 import {
@@ -9,11 +9,7 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
-import {
-  MOCK_ALLO_ADDRESS,
-  tenderlyRpcUrl,
-  USDC_ON_POL,
-} from "../utils/constants";
+import { MOCK_ALLO_ADDRESS, tenderlyRpcUrl } from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -36,7 +32,7 @@ const getPermitData = async (vote: Vote) => {
     expiration,
     nonce,
   } = await allowanceProvider.getAllowanceData(
-    USDC_ON_POL,
+    vote.token,
     wallet.address,
     MOCK_ALLO_ADDRESS,
   );
@@ -46,7 +42,7 @@ const getPermitData = async (vote: Vote) => {
     nonce,
     permitted: {
       amount: permitAmount,
-      token: USDC_ON_POL,
+      token: vote.token,
     },
     deadline: expiration,
   };
@@ -85,7 +81,7 @@ function getEncodedAllocation(data: any): `0x${string}` {
   );
 }
 
-export default async function (vote: Vote) {
+export default async function (vote: VoteWithChains) {
   const permit2Data = await getPermitData(vote);
 
   const encodedAllocation = getEncodedAllocation({

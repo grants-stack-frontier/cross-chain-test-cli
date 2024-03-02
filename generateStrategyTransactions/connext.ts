@@ -1,8 +1,8 @@
 import { BigNumber, ethers } from "ethers";
-import { Vote } from "../types";
+import { VoteWithChains } from "../types";
 import { create, SdkConfig } from "@connext/sdk";
 import { wallet } from "../utils/ethers";
-import { tenderlyRpcUrl, USDC_ON_POL, USDCe_ON_OP } from "../utils/constants";
+import { getTokenForChain, tenderlyRpcUrl } from "../utils/constants";
 
 export const getConnextDomain = (chainId: number) => {
   switch (chainId) {
@@ -49,15 +49,15 @@ export const sdkConfig: SdkConfig = {
 
 export async function generateConnextTransaction(
   tx: ethers.PopulatedTransaction,
-  vote: Vote,
+  vote: VoteWithChains,
 ) {
   const { sdkBase } = await create(sdkConfig);
   const signerAddress = await wallet.getAddress();
 
   // xcall parameters
-  const originDomain = getConnextDomain(10);
-  const destinationDomain = getConnextDomain(137);
-  const originAsset = USDCe_ON_OP;
+  const originDomain = getConnextDomain(vote.fromChain);
+  const destinationDomain = getConnextDomain(vote.toChain);
+  const originAsset = vote.token;
   const amount = ethers.utils.parseUnits("10", 6).toString();
   const slippage = "10000";
 
@@ -87,16 +87,16 @@ export async function generateConnextTransaction(
   xcallTxReq.gasLimit = BigNumber.from("20000000");
   return {
     request: {
-      fromChain: 10,
-      fromToken: USDCe_ON_OP,
+      fromChain: vote.fromChain,
+      fromToken: vote.token,
       fromAddress: signerAddress,
-      toChain: 137,
-      toToken: USDC_ON_POL,
+      toChain: vote.toChain,
+      toToken: getTokenForChain(vote.toChain, "connext"),
       toAmount: amount,
       contractCalls: [
         {
           fromAmount: amount,
-          fromTokenAddress: USDCe_ON_OP,
+          fromTokenAddress: vote.fromChain,
           toContractAddress: tx.to,
           toContractCallData: tx.data,
           toContractGasLimit: "90000",

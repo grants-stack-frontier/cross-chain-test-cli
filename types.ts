@@ -14,6 +14,11 @@ export type Vote = {
   tx_timestamp: Date;
 };
 
+export type VoteWithChains = Vote & {
+  fromChain: number;
+  toChain: number;
+};
+
 export type Result = {
   txHash: string;
   fromChain: number;

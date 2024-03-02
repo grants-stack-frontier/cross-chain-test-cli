@@ -38,3 +38,17 @@ export const USDC_ON_POL = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
 
 export const ALLO_ADDRESS = "0x1133eA7Af70876e64665ecD07C0A0476d09465a1";
 export const MOCK_ALLO_ADDRESS = "0xfB1eD3Fe2978c8aCf1cBA19145D7349A4730EfAd";
+
+export const getTokenForChain = (chainId: number, strategy: string) => {
+  switch (chainId) {
+    case 10:
+      // if (strategy === "connext") {
+      return USDCe_ON_OP;
+    // }
+    // return USDC_ON_OP;
+    case 137:
+      return USDC_ON_POL;
+    default:
+      throw new Error(`ChainId ${chainId} not supported`);
+  }
+};

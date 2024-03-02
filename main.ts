@@ -25,11 +25,14 @@ async function main() {
         value: "lifi",
       },
       {
+        name: "Decent",
+        value: "decent",
+      },
+      {
         name: "Connext",
         value: "connext",
       },
     ],
-    default: "lifi",
   });
   const transactionType = await select({
     message: "Select transaction type",
@@ -49,14 +52,45 @@ async function main() {
     message: "Store results online?",
     default: false,
   });
+  const fromChain = await select({
+    message: "Select from chain",
+    choices: [
+      {
+        name: "Optimism",
+        value: 10,
+      },
+      {
+        name: "Polygon",
+        value: 137,
+      },
+    ],
+  });
+  const toChain = await select({
+    message: "Select to chain",
+    choices: [
+      {
+        name: "Polygon",
+        value: 137,
+      },
+      {
+        name: "Optimism",
+        value: 10,
+      },
+    ],
+  });
 
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
 
   // Calculate distribution across chains
-  const { votes, targetChain } = calculateDistribution(parsedVotes, "default");
+  const { votes } = calculateDistribution(
+    parsedVotes,
+    fromChain,
+    toChain,
+    strategy,
+  );
 
-  console.log(`Found ${votes.length} votes for ${targetChain} chains.`);
+  console.log(`Found ${votes.length} votes for ${fromChain} chains.`);
   // Create voting transactions
   const allocateTransactions = await Promise.all(
     votes.map((vote) => populateTransaction(transactionType, vote)),
