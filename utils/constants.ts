@@ -27,6 +27,22 @@ export const tenderlyRpcUrl = assertExists(
   "TENDERLY_FORK_RPC",
 );
 
+export const tenderlyPolygonRpcUrl = assertExists(
+  process.env.TENDERLY_POLYGON_RPC_URL,
+  "TENDERLY_POLYGON_RPC_URL",
+);
+
+export const getRpcUrl = (chainId: number) => {
+  switch (chainId) {
+    case 10:
+      return tenderlyRpcUrl;
+    case 137:
+      return tenderlyPolygonRpcUrl;
+    default:
+      throw new Error(`ChainId ${chainId} not supported`);
+  }
+};
+
 export const sheetBestUrl = assertExists(
   process.env.SHEET_BEST_URL,
   "SHEET_BEST_URL",
@@ -34,7 +50,7 @@ export const sheetBestUrl = assertExists(
 
 export const USDCe_ON_OP = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
 export const USDC_ON_OP = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
-export const USDC_ON_POL = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
+export const USDC_ON_POL = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 
 export const ALLO_ADDRESS = "0x1133eA7Af70876e64665ecD07C0A0476d09465a1";
 export const MOCK_ALLO_ADDRESS = "0xfB1eD3Fe2978c8aCf1cBA19145D7349A4730EfAd";
@@ -42,10 +58,10 @@ export const MOCK_ALLO_ADDRESS = "0xfB1eD3Fe2978c8aCf1cBA19145D7349A4730EfAd";
 export const getTokenForChain = (chainId: number, strategy: string) => {
   switch (chainId) {
     case 10:
-      // if (strategy === "connext") {
-      return USDCe_ON_OP;
-    // }
-    // return USDC_ON_OP;
+      if (strategy === "connext") {
+        return USDCe_ON_OP;
+      }
+      return USDC_ON_OP;
     case 137:
       return USDC_ON_POL;
     default:

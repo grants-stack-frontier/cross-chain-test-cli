@@ -13,6 +13,8 @@ export async function generateStrategyTransactions(
       return generateLifiTransaction(tx, vote);
     case "connext":
       return generateConnextTransaction(tx, vote);
+    // case "decent":
+    //   return generateDecentTransaction(tx, vote);
     default:
       throw new Error(`Strategy ${strategy} not implemented`);
   }

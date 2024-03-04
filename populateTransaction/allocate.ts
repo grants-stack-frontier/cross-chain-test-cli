@@ -9,7 +9,7 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
-import { ALLO_ADDRESS, tenderlyRpcUrl } from "../utils/constants";
+import { ALLO_ADDRESS, getRpcUrl } from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -24,8 +24,7 @@ function toDeadline(expiration: number): number {
 
 const getPermitData = async (vote: VoteWithChains) => {
   const provider = new ethers.providers.JsonRpcProvider(
-    tenderlyRpcUrl,
-    // "https://mainnet.optimism.io",
+    getRpcUrl(vote.fromChain),
   );
   const signer = wallet.connect(provider);
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
@@ -100,5 +99,5 @@ export default async function (vote: VoteWithChains) {
     AlloAbi,
   ).populateTransaction.allocate(POOL_ID, encodedAllocation);
 
-  return { tx, vote };
+  return { tx, vote, encodedAllocation };
 }

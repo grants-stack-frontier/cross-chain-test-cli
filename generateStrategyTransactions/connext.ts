@@ -2,7 +2,11 @@ import { BigNumber, ethers } from "ethers";
 import { VoteWithChains } from "../types";
 import { create, SdkConfig } from "@connext/sdk";
 import { wallet } from "../utils/ethers";
-import { getTokenForChain, tenderlyRpcUrl } from "../utils/constants";
+import {
+  getTokenForChain,
+  tenderlyPolygonRpcUrl,
+  tenderlyRpcUrl,
+} from "../utils/constants";
 
 export const getConnextDomain = (chainId: number) => {
   switch (chainId) {
@@ -37,7 +41,7 @@ export const sdkConfig: SdkConfig = {
       // providers: ["https://mainnet.optimism.io"],
     },
     [getConnextDomain(137)]: {
-      providers: [tenderlyRpcUrl],
+      providers: [tenderlyPolygonRpcUrl],
       // providers: ["https://polygon-rpc.com"],
     },
     [getConnextDomain(42161)]: {
@@ -58,6 +62,7 @@ export async function generateConnextTransaction(
   const originDomain = getConnextDomain(vote.fromChain);
   const destinationDomain = getConnextDomain(vote.toChain);
   const originAsset = vote.token;
+  console.log("originAsset", originAsset);
   const amount = ethers.utils.parseUnits("10", 6).toString();
   const slippage = "10000";
 
@@ -96,7 +101,7 @@ export async function generateConnextTransaction(
       contractCalls: [
         {
           fromAmount: amount,
-          fromTokenAddress: vote.fromChain,
+          fromTokenAddress: vote.token,
           toContractAddress: tx.to,
           toContractCallData: tx.data,
           toContractGasLimit: "90000",

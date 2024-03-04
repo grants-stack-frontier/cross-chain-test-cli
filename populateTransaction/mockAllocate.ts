@@ -1,4 +1,4 @@
-import { Vote, VoteWithChains } from "../types";
+import { VoteWithChains } from "../types";
 import { ethers } from "ethers";
 import { AlloAbi } from "@allo-team/allo-v2-sdk";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
-import { MOCK_ALLO_ADDRESS, tenderlyRpcUrl } from "../utils/constants";
+import { getRpcUrl, MOCK_ALLO_ADDRESS } from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -22,8 +22,10 @@ function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
 }
 
-const getPermitData = async (vote: Vote) => {
-  const provider = new ethers.providers.JsonRpcProvider(tenderlyRpcUrl);
+const getPermitData = async (vote: VoteWithChains) => {
+  const provider = new ethers.providers.JsonRpcProvider(
+    getRpcUrl(vote.fromChain),
+  );
   const signer = wallet.connect(provider);
   const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
 
@@ -50,7 +52,7 @@ const getPermitData = async (vote: Vote) => {
   const { domain, types, values } = SignatureTransfer.getPermitData(
     permitSingle,
     PERMIT2_ADDRESS,
-    vote.chain_id,
+    vote.fromChain,
   );
 
   // We use an ethers signer to sign this data:

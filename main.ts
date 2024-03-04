@@ -21,16 +21,16 @@ async function main() {
     message: "Select strategy",
     choices: [
       {
+        name: "Connext",
+        value: "connext",
+      },
+      {
         name: "Lifi",
         value: "lifi",
       },
       {
         name: "Decent",
         value: "decent",
-      },
-      {
-        name: "Connext",
-        value: "connext",
       },
     ],
   });
@@ -56,12 +56,12 @@ async function main() {
     message: "Select from chain",
     choices: [
       {
-        name: "Optimism",
-        value: 10,
-      },
-      {
         name: "Polygon",
         value: 137,
+      },
+      {
+        name: "Optimism",
+        value: 10,
       },
     ],
   });
@@ -69,12 +69,12 @@ async function main() {
     message: "Select to chain",
     choices: [
       {
-        name: "Polygon",
-        value: 137,
-      },
-      {
         name: "Optimism",
         value: 10,
+      },
+      {
+        name: "Polygon",
+        value: 137,
       },
     ],
   });
@@ -99,7 +99,7 @@ async function main() {
   console.log(`Generated ${allocateTransactions.length} transactions.`);
 
   // Prepare strategy (set allowances etc)
-  await prepareStrategy(strategy);
+  await prepareStrategy(strategy, fromChain);
 
   const quotes = await Promise.all(
     allocateTransactions
@@ -112,7 +112,9 @@ async function main() {
   console.log(`Received ${quotes.length} quotes.`);
 
   const simulations = await Promise.all(
-    quotes.map(({ quote }) => simulateTransaction(quote.transactionRequest)),
+    quotes.map(({ quote }) =>
+      simulateTransaction(quote.transactionRequest, fromChain),
+    ),
   );
 
   console.log(`Simulated ${simulations.length} transactions.`);

@@ -5,13 +5,13 @@ import {
 } from "../generateStrategyTransactions/connext";
 import { wallet } from "../utils/ethers";
 import { BigNumber, ethers } from "ethers";
-import { tenderlyRpcUrl, USDCe_ON_OP } from "../utils/constants";
+import { getRpcUrl, getTokenForChain } from "../utils/constants";
 
-export const prepareConnext = async () => {
+export const prepareConnext = async (chainId: number) => {
   const { sdkBase } = await create(sdkConfig);
 
-  const originDomain = getConnextDomain(10);
-  const originAsset = USDCe_ON_OP;
+  const originDomain = getConnextDomain(chainId);
+  const originAsset = getTokenForChain(chainId, "connext");
   const amount = ethers.utils.parseUnits("10", 6).toString();
 
   // Approve the asset transfer if the current allowance is lower than the amount.
@@ -26,7 +26,7 @@ export const prepareConnext = async () => {
   if (approveTxReq) {
     console.log("Setting approval for connext");
     const walletWithProvider = wallet.connect(
-      new ethers.providers.JsonRpcProvider(tenderlyRpcUrl),
+      new ethers.providers.JsonRpcProvider(getRpcUrl(chainId)),
     );
     approveTxReq.gasLimit = BigNumber.from("20000000");
     // console.log(wallet.provider, walletWithProvider.provider);
