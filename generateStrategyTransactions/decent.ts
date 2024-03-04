@@ -1,11 +1,11 @@
 import {
   ActionType,
-  ArbitraryEvmActionConfig,
   BoxActionRequest,
   BoxActionResponse,
 } from "@decent.xyz/box-common";
 import { VoteWithChains } from "../types";
 import { ethers } from "ethers";
+import { decentApiKey } from "../utils/constants";
 
 export const bigintSerializer = (key: string, value: unknown): unknown => {
   if (typeof value === "bigint") {
@@ -27,30 +27,25 @@ export async function generateDecentTransaction(
   tx: ethers.PopulatedTransaction,
   vote: VoteWithChains,
 ) {
-  const actionConfig: ArbitraryEvmActionConfig = {
-    chainId: vote.toChain,
-    actions: [
-      {
-        address: vote.roundAddress,
-        functionName: "allocate",
-        args: [tx.data],
-        signatures: [],
-      },
-    ],
-  };
   const req: BoxActionRequest = {
     srcChainId: vote.fromChain,
     dstChainId: vote.toChain,
     srcToken: vote.token,
     dstToken: vote.token,
     slippage: 0,
-    actionType: ActionType.ArbitraryEvmAction,
-    actionConfig,
+    actionType: "arbitrary-evm-action" as ActionType,
+    actionConfig: {
+      chainId: vote.toChain,
+      contractAddress: vote.roundAddress,
+      signature: "allocate(uint256 poolId, bytes data)",
+      args: [1, ""],
+    },
     sender: vote.voter,
   };
   // if (account) {
   //   req = await createBoxActionRequest(account, apiTest);
   // }
+  console.log("Req", req);
 
   const url = `https://box-v1.api.decent.xyz/api/getBoxAction?arguments=${JSON.stringify(
     req,
@@ -59,7 +54,7 @@ export async function generateDecentTransaction(
   try {
     const response = await fetch(url, {
       headers: {
-        "x-api-key": process.env.NEXT_PUBLIC_DECENT_API_KEY as string,
+        "x-api-key": decentApiKey,
       },
     });
     const data = await response.text();
@@ -68,6 +63,7 @@ export async function generateDecentTransaction(
       data,
       bigintDeserializer,
     );
+    console.log("actionResponse", actionResponse);
     return {
       quote: {
         transactionRequest: actionResponse.tx,

@@ -48,6 +48,11 @@ export const sheetBestUrl = assertExists(
   "SHEET_BEST_URL",
 );
 
+export const decentApiKey = assertExists(
+  process.env.DECENT_API_KEY,
+  "DECENT_API_KEY",
+);
+
 export const USDCe_ON_OP = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
 export const USDC_ON_OP = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 export const USDC_ON_POL = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
