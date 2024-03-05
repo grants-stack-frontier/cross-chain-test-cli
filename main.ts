@@ -56,12 +56,16 @@ async function main() {
     message: "Select from chain",
     choices: [
       {
+        name: "Optimism",
+        value: 10,
+      },
+      {
         name: "Polygon",
         value: 137,
       },
       {
-        name: "Optimism",
-        value: 10,
+        name: "Arbitrum",
+        value: 42161,
       },
     ],
   });
@@ -75,6 +79,10 @@ async function main() {
       {
         name: "Polygon",
         value: 137,
+      },
+      {
+        name: "Arbitrum",
+        value: 42161,
       },
     ],
   });

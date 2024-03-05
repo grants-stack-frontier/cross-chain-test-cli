@@ -4,6 +4,7 @@ import { create, SdkConfig } from "@connext/sdk";
 import { wallet } from "../utils/ethers";
 import {
   getTokenForChain,
+  tenderlyArbitrumRpcUrl,
   tenderlyPolygonRpcUrl,
   tenderlyRpcUrl,
 } from "../utils/constants";
@@ -32,10 +33,6 @@ export const sdkConfig: SdkConfig = {
   network: "mainnet",
   logLevel: "error",
   chains: {
-    [getConnextDomain(1)]: {
-      // providers: ["https://eth.llamarpc.com"],
-      providers: [tenderlyRpcUrl],
-    },
     [getConnextDomain(10)]: {
       providers: [tenderlyRpcUrl],
       // providers: ["https://mainnet.optimism.io"],
@@ -45,7 +42,7 @@ export const sdkConfig: SdkConfig = {
       // providers: ["https://polygon-rpc.com"],
     },
     [getConnextDomain(42161)]: {
-      providers: [tenderlyRpcUrl],
+      providers: [tenderlyArbitrumRpcUrl],
       // providers: ["https://arb1.arbitrum.io/rpc"],
     },
   },
