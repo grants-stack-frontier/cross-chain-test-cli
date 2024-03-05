@@ -1,12 +1,12 @@
-import { Vote } from "../types";
+import { VoteWithChains } from "../types";
 import populateAllocateTransaction from "./allocate";
 import populateMockAllocateTransaction from "./mockAllocate";
 import { ethers } from "ethers";
 
 export async function populateTransaction(
   type: string,
-  vote: Vote,
-): Promise<{ tx: ethers.PopulatedTransaction; vote: Vote }> {
+  vote: VoteWithChains,
+): Promise<{ tx: ethers.PopulatedTransaction; vote: VoteWithChains }> {
   switch (type) {
     case "allocate": {
       return populateAllocateTransaction(vote);

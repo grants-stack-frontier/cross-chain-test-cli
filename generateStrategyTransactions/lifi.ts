@@ -1,7 +1,7 @@
-import { ethers } from "ethers";
-import { Vote } from "../types";
+import { ethers, PopulatedTransaction } from "ethers";
+import { VoteWithChains } from "../types";
 import axios from "axios";
-import { USDC_ON_OP, USDC_ON_POL } from "../utils/constants";
+import { getTokenForChain } from "../utils/constants";
 
 // https://apidocs.li.fi/reference/post_quote-contractcalls
 // https://docs.li.fi/integrate-li.fi-js-sdk/testing-your-integration
@@ -9,33 +9,40 @@ const endpoint = "https://li.quest/v1/quote/contractCalls";
 
 export async function generateLifiTransaction(
   tx: ethers.PopulatedTransaction,
-  vote: Vote,
+  vote: VoteWithChains,
 ) {
   // Generate transactions for the
-  return await getQuote(tx);
+  return await getQuote(tx, vote);
 }
 
-const getQuote = async (tx: ethers.PopulatedTransaction): Promise<any> => {
+const getQuote = async (
+  tx: PopulatedTransaction,
+  vote: VoteWithChains,
+): Promise<any> => {
   //USDC has 6 decimals
   const stakeAmount = ethers.utils.parseUnits("10", 6).toString();
 
+  console.log(vote);
+
   const contractCall = {
     fromAmount: stakeAmount,
-    fromTokenAddress: USDC_ON_POL,
+    fromTokenAddress: getTokenForChain(vote.toChain, "lifi"),
     toContractAddress: tx.to,
     toContractCallData: tx.data,
     toContractGasLimit: "90000",
   };
 
   const quoteRequest = {
-    fromChain: 10, // OP
-    fromToken: USDC_ON_OP,
+    fromChain: vote.fromChain,
+    fromToken: vote.token,
     fromAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-    toChain: 137,
-    toToken: USDC_ON_POL,
+    toChain: vote.toChain,
+    toToken: getTokenForChain(vote.toChain, "lifi"),
     toAmount: stakeAmount,
     contractCalls: [contractCall],
   };
+
+  console.log("quoteRequest", quoteRequest);
 
   const response = await axios.post(endpoint, quoteRequest);
 

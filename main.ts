@@ -21,15 +21,18 @@ async function main() {
     message: "Select strategy",
     choices: [
       {
+        name: "Connext",
+        value: "connext",
+      },
+      {
         name: "Lifi",
         value: "lifi",
       },
       {
-        name: "Connext",
-        value: "connext",
+        name: "Decent",
+        value: "decent",
       },
     ],
-    default: "lifi",
   });
   const transactionType = await select({
     message: "Select transaction type",
@@ -49,14 +52,45 @@ async function main() {
     message: "Store results online?",
     default: false,
   });
+  const fromChain = await select({
+    message: "Select from chain",
+    choices: [
+      {
+        name: "Polygon",
+        value: 137,
+      },
+      {
+        name: "Optimism",
+        value: 10,
+      },
+    ],
+  });
+  const toChain = await select({
+    message: "Select to chain",
+    choices: [
+      {
+        name: "Optimism",
+        value: 10,
+      },
+      {
+        name: "Polygon",
+        value: 137,
+      },
+    ],
+  });
 
   // Parse votes from CSV
   const parsedVotes = await processFile(filePath);
 
   // Calculate distribution across chains
-  const { votes, targetChain } = calculateDistribution(parsedVotes, "default");
+  const { votes } = calculateDistribution(
+    parsedVotes,
+    fromChain,
+    toChain,
+    strategy,
+  );
 
-  console.log(`Found ${votes.length} votes for ${targetChain} chains.`);
+  console.log(`Found ${votes.length} votes for ${fromChain} chains.`);
   // Create voting transactions
   const allocateTransactions = await Promise.all(
     votes.map((vote) => populateTransaction(transactionType, vote)),
@@ -65,7 +99,7 @@ async function main() {
   console.log(`Generated ${allocateTransactions.length} transactions.`);
 
   // Prepare strategy (set allowances etc)
-  await prepareStrategy(strategy);
+  await prepareStrategy(strategy, fromChain);
 
   const quotes = await Promise.all(
     allocateTransactions
@@ -78,7 +112,9 @@ async function main() {
   console.log(`Received ${quotes.length} quotes.`);
 
   const simulations = await Promise.all(
-    quotes.map(({ quote }) => simulateTransaction(quote.transactionRequest)),
+    quotes.map(({ quote }) =>
+      simulateTransaction(quote.transactionRequest, fromChain),
+    ),
   );
 
   console.log(`Simulated ${simulations.length} transactions.`);
