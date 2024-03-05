@@ -23,7 +23,7 @@ export const tenderlyApiUrl = assertExists(
 export const lifiDiamond = "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE";
 
 export const tenderlyRpcUrl = assertExists(
-  process.env.TENDERLY_FORK_RPC,
+  process.env.TENDERLY_OPTIMISM_RPC_URL,
   "TENDERLY_FORK_RPC",
 );
 
