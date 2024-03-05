@@ -9,7 +9,7 @@ import {
 } from "@uniswap/permit2-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { wallet } from "../utils/ethers";
-import { getRpcUrl, MOCK_ALLO_ADDRESS } from "../utils/constants";
+import { getRpcUrl, getMockAlloContractAddress } from "../utils/constants";
 
 const POOL_ID = 1;
 
@@ -36,7 +36,7 @@ const getPermitData = async (vote: VoteWithChains) => {
   } = await allowanceProvider.getAllowanceData(
     vote.token,
     wallet.address,
-    MOCK_ALLO_ADDRESS,
+    getMockAlloContractAddress(vote.toChain),
   );
 
   const permitSingle: PermitTransferFrom = {
@@ -93,7 +93,7 @@ export default async function (vote: VoteWithChains) {
   });
 
   const tx = await new ethers.Contract(
-    MOCK_ALLO_ADDRESS,
+    getMockAlloContractAddress(vote.toChain),
     AlloAbi,
   ).populateTransaction.allocate(POOL_ID, encodedAllocation);
 

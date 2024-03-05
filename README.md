@@ -10,8 +10,9 @@ transaction types and crosschain strategies.
 ### Getting started
 1. Install the required packages `yarn install`
 2. Create a fork with it's own RPC (we recommend tenderly for a good developer experience) for each chain that needs to be tested
-3. Setup env vars by renaming/copying `.env.template` to `.env` and filling in the required values
-4. Start the interactive CLI utility with `yarn start`
+3. If you want to store the results in a spreadsheet, [generate a sheet.best api url](https://docs.sheet.best/#generating-your-rest-api)
+4. Setup env vars by renaming/copying `.env.template` to `.env` and filling in the required values
+5. Start the interactive CLI utility with `yarn start`
 
 ### Testing data
 The utility will read in the `example_votes.csv` file and use the data to simulate transactions on the blockchain. The file should be in the following format:
