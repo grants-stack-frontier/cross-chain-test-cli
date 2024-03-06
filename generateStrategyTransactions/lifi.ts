@@ -29,7 +29,7 @@ const getQuote = async (
     fromTokenAddress: getTokenForChain(vote.toChain, "lifi"),
     toContractAddress: tx.to,
     toContractCallData: tx.data,
-    toContractGasLimit: "90000",
+    toContractGasLimit: "1800000",
   };
 
   const quoteRequest = {
