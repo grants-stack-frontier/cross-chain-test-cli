@@ -189,6 +189,7 @@ async function main() {
       }
     }),
   ).then((res) => res.map((x) => ({ ...x, createdAt, transactionType })));
+  console.log(results);
 
   // Write to CSV
   writeToCSV({
